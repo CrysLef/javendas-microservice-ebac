@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: produto-service
+  cloud:
+    config:
+      uri: http://${HOST_CONFIG_SERVER:localhost}:8888
+      fail-fast: true
+      retry:
+        max-attempts: 20
