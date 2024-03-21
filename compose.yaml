@@ -1,0 +1,87 @@
+services:
+  javendas-db:
+    image: mongo:latest
+    container_name: javendas-db
+    ports:
+      - "27017:27017"
+    networks:
+      - javendas-net
+
+  config-server:
+    build:
+      context: configServer/
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    networks:
+      - javendas-net
+  
+  service-discovery:
+    build:
+      context: serviceDiscovery/
+    container_name: service-discovery
+    environment:
+      HOST_CONFIG_SERVER: config-server
+    ports:
+      - "8761:8761"
+    depends_on:
+      - config-server
+    networks:
+      - javendas-net
+  
+  cliente-service:
+    build:
+      context: clienteService/
+    container_name: cliente-service
+    environment:
+      DISCOVERY_HOST: service-discovery
+      MONGODB_URL: javendas-db
+      HOST_CONFIG_SERVER: config-server
+    ports:
+      - "8080:8080"
+    depends_on:
+      - config-server
+      - service-discovery
+      - javendas-db
+    networks:
+      - javendas-net
+
+  produto-service:
+    build: 
+      context: produtoService/
+    container_name: produto-service
+    environment:
+      DISCOVERY_HOST: service-discovery
+      MONGODB_URL: javendas-db
+      HOST_CONFIG_SERVER: config-server
+    ports:
+      - "8081:8080"
+    depends_on:
+      - config-server
+      - service-discovery
+      - javendas-db
+    networks:
+      - javendas-net
+
+  venda-service:
+    build: 
+      context: vendaService/
+    container_name: venda-service
+    environment:
+      DISCOVERY_HOST: service-discovery
+      MONGODB_URL: javendas-db
+      HOST_CONFIG_SERVER: config-server
+    ports:
+      - "8082:8080"
+    depends_on:
+      - config-server
+      - service-discovery
+      - javendas-db
+      - produto-service
+      - cliente-service
+    networks:
+      - javendas-net
+  
+networks:
+  javendas-net:
+    driver: bridge
